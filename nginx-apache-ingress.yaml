@@ -1,0 +1,70 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: combined-ingress
+  namespace: default
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/group.name: nginx-apache-group
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:533267294726:certificate/f93aa6c8-3260-46cd-bdd7-5430e30c35f2,arn:aws:acm:us-east-1:533267294726:certificate/c8a72a94-c33c-4855-901b-6a959fa080d1
+    alb.ingress.kubernetes.io/actions.ssl-redirect: >
+    alb.ingress.kubernetes.io/ssl-redirect: '443'
+    alb.ingress.kubernetes.io/actions.fixed-response: >
+      {"Type": "fixed-response", "FixedResponseConfig": {"ContentType": "text/plain", "StatusCode": "200", "MessageBody": "Hello from Rutvij"}}
+
+
+spec:
+  rules:
+    - host: kubernginx.kathabhawan.com
+      http:
+        paths:
+          - path: /nginx
+            pathType: Prefix
+            backend:
+              service:
+                name: nginx-service
+                port:
+                  number: 80
+          - path: /nginx/
+            pathType: Prefix
+            backend:
+              service:
+                name: nginx-service
+                port:
+                  number: 80
+          - path: /
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: fixed-response
+                port:
+                  name: use-annotation
+
+    - host: kuberapache.kathabhawan.com
+      http:
+        paths:
+          - path: /apache
+            pathType: Prefix
+            backend:
+              service:
+                name: apache-service
+                port:
+                  number: 80
+          - path: /apache/
+            pathType: Prefix
+            backend:
+              service:
+                name: apache-service
+                port:
+                  number: 80
+          - path: /
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: fixed-response
+                port:
+                  name: use-annotation
+
